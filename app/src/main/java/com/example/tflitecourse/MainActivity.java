@@ -53,7 +53,7 @@ public class MainActivity extends AppCompatActivity {
         imageView = findViewById(R.id.image);
         buttonLoadImage = findViewById(R.id.button_load_image);
         buttonClassifyImage = findViewById(R.id.button_classify_image);
-        textViewBreed = (TextView) findViewById(R.id.textView_breed);
+        textViewBreed = (TextView) findViewById(R.id.textView_flower);
         textViewConfidence = (TextView) findViewById(R.id.textView_confidence);
 
         try {
@@ -110,7 +110,7 @@ public class MainActivity extends AppCompatActivity {
             TensorImage inputImage = new TensorImage(DataType.FLOAT32);
             inputImage.load(bitmap);
             inputImage = imageProcessor.process(inputImage);
-            TensorBuffer output = TensorBuffer.createFixedSize(new int[]{1, 120}, DataType.FLOAT32);
+            TensorBuffer output = TensorBuffer.createFixedSize(new int[]{1, 102}, DataType.FLOAT32);
 
             interpreter.run(inputImage.getBuffer(), output.getBuffer());
 
@@ -118,7 +118,7 @@ public class MainActivity extends AppCompatActivity {
             TensorLabel tensorLabels = new TensorLabel(labels, tensorProcessor.process(output));
             Map<String, Float> floatMap = tensorLabels.getMapWithFloatValue();
             Map.Entry<String, Float> argMax = floatMap.entrySet().stream()
-                    .max(Comparator.comparing(Map.Entry::getValue)).get();
+                    .max(Map.Entry.comparingByValue()).get();
             displayOutput(argMax.getKey(), argMax.getValue().floatValue());
         }).start();
     }
