@@ -5,6 +5,7 @@ import android.content.Intent;
 import android.graphics.Bitmap;
 import android.graphics.drawable.BitmapDrawable;
 import android.os.Bundle;
+import android.provider.MediaStore;
 import android.util.Log;
 import android.widget.Button;
 import android.widget.ImageView;
@@ -26,20 +27,23 @@ import org.tensorflow.lite.support.tensorbuffer.TensorBuffer;
 
 import java.io.IOException;
 import java.nio.MappedByteBuffer;
-import java.util.Comparator;
 import java.util.List;
 import java.util.Map;
 
 public class MainActivity extends AppCompatActivity {
 
-    private static final int REQUEST_CODE = 100;
     private static final int IMAGE_SIZE = 224;
+    private static final int NUM_CLASSES = 102;
+    private static final float CLASSIFICATION_THRESHOLD = 0.7f;
     private static final String MODEL_FILENAME = "model.tflite";
     private static final String LABELS_FILENAME = "labels.txt";
+
+    private static final int REQUEST_CODE_IMAGE_CAMERA = 1;
+    private static final int REQUEST_CODE_IMAGE_GALLERY = 100;
     private static final String LOG_TAG = MainActivity.class.getCanonicalName();
 
     private ImageView imageView;
-    private Button buttonLoadImage, buttonClassifyImage;
+    private Button buttonLoadImageFromGallery, buttonLoadImageFromCamera, buttonClassifyImage;
     private TextView textViewBreed, textViewConfidence;
     private Interpreter interpreter;
     private List<String> labels;
@@ -51,7 +55,8 @@ public class MainActivity extends AppCompatActivity {
         setContentView(R.layout.activity_main);
 
         imageView = findViewById(R.id.image);
-        buttonLoadImage = findViewById(R.id.button_load_image);
+        buttonLoadImageFromGallery = findViewById(R.id.button_load_image_from_gallery);
+        buttonLoadImageFromCamera = findViewById(R.id.button_load_image_from_camera);
         buttonClassifyImage = findViewById(R.id.button_classify_image);
         textViewBreed = (TextView) findViewById(R.id.textView_flower);
         textViewConfidence = (TextView) findViewById(R.id.textView_confidence);
@@ -63,7 +68,8 @@ public class MainActivity extends AppCompatActivity {
             e.printStackTrace();
         }
 
-        buttonLoadImage.setOnClickListener(view -> openGalleryForImage());
+        buttonLoadImageFromGallery.setOnClickListener(view -> openGalleryForImage());
+        buttonLoadImageFromCamera.setOnClickListener(view -> openCameraForImage());
         buttonClassifyImage.setOnClickListener(view -> classifyImage());
     }
 
@@ -88,14 +94,25 @@ public class MainActivity extends AppCompatActivity {
     private void openGalleryForImage() {
         Intent intent = new Intent(Intent.ACTION_PICK);
         intent.setType("image/*");
-        startActivityForResult(intent, REQUEST_CODE);
+        startActivityForResult(intent, REQUEST_CODE_IMAGE_GALLERY);
+    }
+
+    private void openCameraForImage() {
+        Intent intent = new Intent(MediaStore.ACTION_IMAGE_CAPTURE);
+        startActivityForResult(intent, REQUEST_CODE_IMAGE_CAMERA);
     }
 
     @Override
     public void onActivityResult(int requestCode, int resultCode, Intent data) {
         super.onActivityResult(requestCode, resultCode, data);
-        if (resultCode == Activity.RESULT_OK && requestCode == REQUEST_CODE) {
-            imageView.setImageURI(data.getData());
+        if (resultCode == Activity.RESULT_OK) {
+            if (requestCode == REQUEST_CODE_IMAGE_GALLERY) {
+                imageView.setImageURI(data.getData());
+            } else if (requestCode == REQUEST_CODE_IMAGE_CAMERA) {
+                Bundle extras = data.getExtras();
+                Bitmap imageBitmap = (Bitmap) extras.get("data");
+                imageView.setImageBitmap(imageBitmap);
+            }
             buttonClassifyImage.setEnabled(true);
         }
     }
@@ -110,7 +127,7 @@ public class MainActivity extends AppCompatActivity {
             TensorImage inputImage = new TensorImage(DataType.FLOAT32);
             inputImage.load(bitmap);
             inputImage = imageProcessor.process(inputImage);
-            TensorBuffer output = TensorBuffer.createFixedSize(new int[]{1, 102}, DataType.FLOAT32);
+            TensorBuffer output = TensorBuffer.createFixedSize(new int[]{1, NUM_CLASSES}, DataType.FLOAT32);
 
             interpreter.run(inputImage.getBuffer(), output.getBuffer());
 
@@ -119,7 +136,11 @@ public class MainActivity extends AppCompatActivity {
             Map<String, Float> floatMap = tensorLabels.getMapWithFloatValue();
             Map.Entry<String, Float> argMax = floatMap.entrySet().stream()
                     .max(Map.Entry.comparingByValue()).get();
-            displayOutput(argMax.getKey(), argMax.getValue().floatValue());
+            float confidence = argMax.getValue().floatValue();
+            if (confidence > CLASSIFICATION_THRESHOLD)
+                displayOutput(argMax.getKey(), confidence);
+            else
+                displayUnknownOutput();
         }).start();
     }
 
@@ -127,6 +148,14 @@ public class MainActivity extends AppCompatActivity {
         runOnUiThread(() -> {
             textViewBreed.setText(dogBreed);
             textViewConfidence.setText(String.format("%.2f%%", confidence));
+        });
+    }
+
+    private void displayUnknownOutput() {
+        runOnUiThread(() -> {
+            textViewBreed.setText("-");
+            textViewConfidence.setText(String.format("-"));
+            Toast.makeText(this, "Espécie não identificada.", Toast.LENGTH_LONG).show();
         });
     }
 }
