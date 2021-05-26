@@ -33,8 +33,8 @@ import java.util.Map;
 public class MainActivity extends AppCompatActivity {
 
     private static final int IMAGE_SIZE = 224;
-    private static final int NUM_CLASSES = 102;
-    private static final float CLASSIFICATION_THRESHOLD = 0.7f;
+    private static final int NUM_CLASSES = 120;
+    private static final float CLASSIFICATION_THRESHOLD = 0.5f;
     private static final String MODEL_FILENAME = "model.tflite";
     private static final String LABELS_FILENAME = "labels.txt";
 
@@ -58,7 +58,7 @@ public class MainActivity extends AppCompatActivity {
         buttonLoadImageFromGallery = findViewById(R.id.button_load_image_from_gallery);
         buttonLoadImageFromCamera = findViewById(R.id.button_load_image_from_camera);
         buttonClassifyImage = findViewById(R.id.button_classify_image);
-        textViewBreed = (TextView) findViewById(R.id.textView_flower);
+        textViewBreed = (TextView) findViewById(R.id.textView_breed);
         textViewConfidence = (TextView) findViewById(R.id.textView_confidence);
 
         try {
@@ -155,7 +155,7 @@ public class MainActivity extends AppCompatActivity {
         runOnUiThread(() -> {
             textViewBreed.setText("-");
             textViewConfidence.setText(String.format("-"));
-            Toast.makeText(this, "Espécie não identificada.", Toast.LENGTH_LONG).show();
+            Toast.makeText(this, "Unknown breed.", Toast.LENGTH_LONG).show();
         });
     }
 }

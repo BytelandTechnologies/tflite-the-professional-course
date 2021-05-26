@@ -42,12 +42,12 @@
                 <TextView
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
-                    android:text="Espécie da Flor"
+                    android:text="Dog breed"
                     android:textSize="16dp"
                     android:textStyle="bold"></TextView>
 
                 <TextView
-                    android:id="@+id/textView_flower"
+                    android:id="@+id/textView_breed"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
                     android:text="-"
@@ -65,7 +65,7 @@
                 <TextView
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
-                    android:text="Confiança"
+                    android:text="Confidence"
                     android:textSize="16dp"
                     android:textStyle="bold"></TextView>
 
@@ -89,20 +89,20 @@
                 android:id="@+id/button_load_image_from_gallery"
                 android:layout_width="200dp"
                 android:layout_height="wrap_content"
-                android:text="Abrir Galeria" />
+                android:text="Open Gallery" />
 
             <Button
                 android:id="@+id/button_load_image_from_camera"
                 android:layout_width="200dp"
                 android:layout_height="wrap_content"
-                android:text="Abrir Câmera" />
+                android:text="Launch Camera" />
 
             <Button
                 android:id="@+id/button_classify_image"
                 android:layout_width="200dp"
                 android:layout_height="wrap_content"
                 android:enabled="false"
-                android:text="Classificar Flor" />
+                android:text="Classify Dog" />
         </LinearLayout>
     </LinearLayout>
 
