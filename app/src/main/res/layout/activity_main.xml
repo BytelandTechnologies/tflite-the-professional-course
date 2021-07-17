@@ -42,12 +42,12 @@
                 <TextView
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
-                    android:text="Dog breed"
+                    android:text="Dog Breed"
                     android:textSize="16dp"
                     android:textStyle="bold"></TextView>
 
                 <TextView
-                    android:id="@+id/textView_breed"
+                    android:id="@+id/textView_dog"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
                     android:text="-"
