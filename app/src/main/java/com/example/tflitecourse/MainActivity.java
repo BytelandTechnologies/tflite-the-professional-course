@@ -30,11 +30,21 @@ import java.nio.MappedByteBuffer;
 import java.util.List;
 import java.util.Map;
 
+/**
+ * Main activity of the flower classification app developed during the Week 4 of the course
+ * <em>TensorFlow Lite - The professional course</em>.
+ * <p>
+ *
+ * @author Michel Meneses, Luiz Reis
+ * @version 2.0
+ * @since 1.0
+ */
+
 public class MainActivity extends AppCompatActivity {
 
     private static final int IMAGE_SIZE = 224;
     private static final int NUM_CLASSES = 102;
-    private static final float CLASSIFICATION_THRESHOLD = 0.7f;
+    private static final float CLASSIFICATION_THRESHOLD = 0.5f;
     private static final String MODEL_FILENAME = "model.tflite";
     private static final String LABELS_FILENAME = "labels.txt";
 
@@ -73,16 +83,34 @@ public class MainActivity extends AppCompatActivity {
         buttonClassifyImage.setOnClickListener(view -> classifyImage());
     }
 
+    /**
+     * Set up the objects required to pre-process and classify the input images.
+     */
+
     void initModel() throws IOException {
         this.labels = FileUtil.loadLabels(this, LABELS_FILENAME);
         this.interpreter = this.initInterpreter();
         this.imageProcessor = this.initImageProcessor();
     }
 
+    /**
+     * Loads the TF Lite model and encapsulate it inside a TF Lite interpreter.
+     * <p>
+     *
+     * @return The TF Lite interpreter with the converted model already loaded.
+     */
+
     private Interpreter initInterpreter() throws IOException {
         MappedByteBuffer tfLiteModel = FileUtil.loadMappedFile(this, MODEL_FILENAME);
         return new Interpreter(tfLiteModel, new Interpreter.Options());
     }
+
+    /**
+     * Set up a helper object used to pre-process the images to be classified.
+     * <p>
+     *
+     * @return A helper object for pre-processing the input images.
+     */
 
     private ImageProcessor initImageProcessor() {
         return new ImageProcessor.Builder()
@@ -91,16 +119,28 @@ public class MainActivity extends AppCompatActivity {
                 .build();
     }
 
+    /**
+     * Triggers an Android intent for launching the Gallery app.
+     */
+
     private void openGalleryForImage() {
         Intent intent = new Intent(Intent.ACTION_PICK);
         intent.setType("image/*");
         startActivityForResult(intent, REQUEST_CODE_IMAGE_GALLERY);
     }
 
+    /**
+     * Triggers an Android intent for launching the Camera app.
+     */
+
     private void openCameraForImage() {
         Intent intent = new Intent(MediaStore.ACTION_IMAGE_CAPTURE);
         startActivityForResult(intent, REQUEST_CODE_IMAGE_CAMERA);
     }
+
+    /**
+     * Collects and displays the image returned either by the Gallery or the Camera app.
+     */
 
     @Override
     public void onActivityResult(int requestCode, int resultCode, Intent data) {
@@ -116,6 +156,15 @@ public class MainActivity extends AppCompatActivity {
             buttonClassifyImage.setEnabled(true);
         }
     }
+
+    /**
+     * Runs the classification pipeline on the input image loaded via the Gallery or Camera app.
+     * <p>
+     * The classification pipeline includes pre-processing the input image, converting it into a
+     * tensor, feeding the TF Lite interpreting with it and collecting the output prediction via
+     * an output tensor buffer. Later, the final result is presented to the user by updating the
+     * UI components accordingly.
+     */
 
     private void classifyImage() {
         new Thread(() -> {
@@ -138,24 +187,32 @@ public class MainActivity extends AppCompatActivity {
                     .max(Map.Entry.comparingByValue()).get();
             float confidence = argMax.getValue().floatValue();
             if (confidence > CLASSIFICATION_THRESHOLD)
-                displayOutput(argMax.getKey(), confidence);
+                showOutput(argMax.getKey(), confidence);
             else
-                displayUnknownOutput();
+                showUnknownOutput();
         }).start();
     }
 
-    private void displayOutput(String dogBreed, float confidence) {
+    /**
+     * Updates the UI components with the latest classification results.
+     */
+
+    private void showOutput(String flowerSpecies, float confidence) {
         runOnUiThread(() -> {
-            textViewBreed.setText(dogBreed);
+            textViewBreed.setText(flowerSpecies);
             textViewConfidence.setText(String.format("%.2f%%", confidence));
         });
     }
 
-    private void displayUnknownOutput() {
+    /**
+     * Updates the UI components to inform the latest classification result is unknown.
+     */
+
+    private void showUnknownOutput() {
         runOnUiThread(() -> {
             textViewBreed.setText("-");
             textViewConfidence.setText(String.format("-"));
-            Toast.makeText(this, "Espécie não identificada.", Toast.LENGTH_LONG).show();
+            Toast.makeText(this, "Unknown species.", Toast.LENGTH_LONG).show();
         });
     }
 }
